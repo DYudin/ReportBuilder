@@ -158,6 +158,9 @@
     <Compile Include="App_Start\UnityPerRequestHttpModule.cs" />
     <Compile Include="App_Start\UnityWebActivator.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Filters\CustomExceptionAttribute.cs" />
+    <Compile Include="Filters\ValidateModelAttribute.cs" />
+    <Compile Include="Infrastructure\ReportBuilderException.cs" />
     <Compile Include="Infrastructure\Services\Abstract\IEmailService.cs" />
     <Compile Include="Infrastructure\Services\Abstract\IReportBuilder.cs" />
     <Compile Include="Infrastructure\Services\Implementation\CustomEmailService.cs" />

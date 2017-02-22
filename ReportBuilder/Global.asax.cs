@@ -13,6 +13,7 @@ namespace WeatherCatcher
         {
             // Code that runs on application startup
             UnityWebActivator.Start();
+
             //AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
