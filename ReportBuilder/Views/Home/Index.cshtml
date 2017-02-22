@@ -1,0 +1,141 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using ReportBuilder.ViewModels
+
+@Model IEnumerable<OrderViewModel>
+@{
+    ViewBag.Title = "Report builder";
+}
+
+@section Scripts {
+    <script>
+        var viewModel = {
+            orders: ko.observableArray(),
+            editor: {
+                startDate: ko.observable(""),
+                endDate: ko.observable(""),
+                email: ko.observable("")
+            }
+        };
+
+        function sendAjaxRequest(httpMethod, callback, url, reqData) {
+            $.ajax("/api/report" + (url ? "/" + url : ""), {
+                type: httpMethod,
+                success: callback,
+                data: reqData
+            });
+        }
+
+        function showOrdersForPeriod() {
+            sendAjaxRequest("GET",
+                function(data) {
+                    viewModel.orders.removeAll();
+                    for (var i = 0; i < data.length; i++) {
+                        viewModel.orders.push(data[i]);
+                    }
+                },
+                null,
+                {
+                    StartDate: viewModel.editor.startDate,
+                    EndDate: viewModel.editor.endDate
+                });
+        }
+
+        function sendReport() {
+            sendAjaxRequest("POST", function (newItems) {
+                if (newItems.length > 0) {
+                    for (var i = 0; i < newItems.length; i++) {
+                        viewModel.orders.push(newItems[i]);
+                    }
+                } else {
+                    alert('Not found any weather information for selected city');
+                }}, null, { 
+                    Email: viewModel.editor.email
+                }
+            );
+        }
+
+        $(document).ready(function() {
+            //getAllItems();
+            ko.applyBindings(viewModel);
+        });
+    </script>
+}
+
+@section Body {
+    <div id="editor2" class="section panel panel-primary">
+        <div class="panel-body">
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label>Select period for report building</label>
+                    <div class="row">
+                        <div class="col-sm-4 text-left">
+                            Start date
+                        </div>
+                        <div class="col-sm-8 text-left">
+                            <input type="date" class="form-control" data-bind="value: viewModel.editor.startDate" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 text-left">
+                            End date
+                        </div>
+                        <div class="col-sm-8 text-left">
+                            <input type="date" class="form-control" data-bind="value: viewModel.editor.endDate" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-9">
+                </div>
+            </div>
+
+            <button class="btn btn-primary"
+                    data-bind="click: showOrdersForPeriod">
+                Show orders
+            </button>
+
+            <hr>
+            <div class="row">
+                <div class="form-group col-md-3">
+
+                    <label>Enter email of receiver</label>
+                    <div class="row">
+                        <div class="col-sm-8">
+                            <input type="email" class="form-control" data-bind="value: viewModel.editor.email" />
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-9">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary"
+                    data-bind="click: sendReport">
+                Send report
+            </button>
+        </div>
+
+        <div id="summary" class="section panel panel-primary">
+            <div class="panel-heading">Orders for selected period</div>
+            <div class="panel-body">
+                <table class="table table-striped table-condensed">
+                    <thead>
+                        <tr><th>Order ID</th><th>Order date</th><th>Product name</th><th>Quantity</th><th>Unit price</th><th></th></tr>
+                    </thead>
+                    <tbody data-bind="foreach: viewModel.orders">
+                        <tr>
+                            <td data-bind="text: OrderId"></td>
+                            <td data-bind="text: OrderDate"></td>
+                            <td data-bind="text: ProductName"></td>
+                            <td data-bind="text: Quantity"></td>
+                            <td data-bind="text: UnitPrice"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
