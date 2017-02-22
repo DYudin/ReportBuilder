@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AutoMapper;
+using ReportBuilder.Infrastructure.Repositories.Implementation;
 using ReportBuilder.Infrastructure.Services.Abstract;
 using ReportBuilder.Models;
 using ReportBuilder.Services.UnitOfWork.Abstract;
@@ -42,7 +43,7 @@ namespace ReportBuilder.Controllers
         }
 
         //[Route("api/report/selectedorders")]
-        public async Task<IHttpActionResult> GetSelectedOrders(DateTime startDate, DateTime endDate)
+        public async Task<IHttpActionResult> GetOrdersByPeriod(DateTime startDate, DateTime endDate)
         {
             List<OrderViewModel> ordersVM;
 
@@ -50,8 +51,11 @@ namespace ReportBuilder.Controllers
             {
                 List<Order> orders = null;
 
+                //var te = unitOfWork.Test();
+                //var te2 = te.ToList();
+
                 await Task.Run(
-                    () => orders = unitOfWork.OrderRepository.FindByIncluding(x => x.OrderDate < endDate && x.OrderDate > startDate).ToList());
+                    () => orders = unitOfWork.OrderRepository.FindBy(x => x.OrderDate < endDate && x.OrderDate > startDate).ToList());
 
                 Mapper.Initialize(cfg => cfg.CreateMap<Order, OrderViewModel>()
                     .ForMember(
@@ -78,7 +82,7 @@ namespace ReportBuilder.Controllers
         {
             try
             {
-                _emailService.SendFile(vm.Email, "C://Work/document.txt");
+                _emailService.SendFile(vm.Email, "C://Users/Public/unity.txt");
             }
             catch (Exception ex)
             {
