@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Data.Entity;
 using ReportBuilder.Infrastructure.Repositories.Abstract;
+using ReportBuilder.Infrastructure.Repositories.Implementation;
 using ReportBuilder.Services.UnitOfWork.Abstract;
 
 namespace ReportBuilder.Infrastructure.UnitOfWork.Implementation
 {
-    public class UnitOfWork : IUnitOfWork
+    public class EfUnitOfWork : IUnitOfWork
     {
-        private readonly IOrderRepository _orderRepository;
-        private readonly DbContext _context;
+        private IOrderRepository _orderRepository;
+        private readonly ReportBuilderContext _context;
         private bool disposed;
 
-        public UnitOfWork(DbContext context)
+        public EfUnitOfWork()
         {
-            _context = context;
+            _context = new ReportBuilderContext();
+        }
+
+        public IOrderRepository OrderRepository
+        {
+            get { return _orderRepository ?? (_orderRepository = new OrderRepository(_context)); }
         }
 
         public void Commit()

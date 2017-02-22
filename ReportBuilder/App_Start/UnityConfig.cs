@@ -1,12 +1,8 @@
 using Microsoft.Practices.Unity;
 using ReportBuilder.Services.UnitOfWork.Abstract;
 using System;
-using System.Data.Entity;
 using ReportBuilder.Infrastructure.Services.Abstract;
 using ReportBuilder.Infrastructure.Services.Implementation;
-using ReportBuilder.Infrastructure;
-using ReportBuilder.Infrastructure.Repositories.Implementation;
-using ReportBuilder.Infrastructure.Repositories.Abstract;
 using ReportBuilder.Infrastructure.UnitOfWork.Implementation;
 
 namespace ReportBuilder
@@ -20,7 +16,6 @@ namespace ReportBuilder
             return container;
         });
 
-        private static ReportBuilderContext _context;
         public static IUnityContainer GetConfiguredContainer()
         {
             return _container.Value;
@@ -29,25 +24,16 @@ namespace ReportBuilder
         public static void RegisterComponents(IUnityContainer container)
         {
             // Context, UoW factory
-            container.RegisterType<DbContext, ReportBuilderContext>(
-                new PerRequestLifetimeManager());
-            //var context = container.Resolve<DbContext>();
             container.RegisterType<IUnitOfWorkFactory, UnitOfWorkFactory>(
-                new PerRequestLifetimeManager(),
-                new InjectionConstructor(container.Resolve<DbContext>()));
-
-            // Repositories
-            container.RegisterType<IOrderRepository, OrderRepository>(
-                new PerRequestLifetimeManager(),
-                new InjectionConstructor(container.Resolve<DbContext>()));
-            //var userRepository = container.Resolve<IOrderRepository>();
+                new PerRequestLifetimeManager());
 
             // Services
             container.RegisterType<IReportBuilder, ExcelReportBuilder>(
                 new PerRequestLifetimeManager());
 
             container.RegisterType<IEmailService, CustomEmailService>(
-                new PerRequestLifetimeManager());
+                new PerRequestLifetimeManager(),
+                new InjectionConstructor("smtp.yandex.ru", 25));
         }
     }
 }

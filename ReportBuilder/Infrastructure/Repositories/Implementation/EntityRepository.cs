@@ -12,8 +12,8 @@ namespace ReportBuilder.Infrastructure.Repositories.Implementation
     public class EntityRepository<T> : IEntityRepository<T> where T : class, new()
     {
         private ReportBuilderContext _context;
-
-       public EntityRepository(ReportBuilderContext context)
+        
+        public EntityRepository(ReportBuilderContext context)
         {
             _context = context;
         }

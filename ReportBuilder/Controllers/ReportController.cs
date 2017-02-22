@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AutoMapper;
-using ReportBuilder.Infrastructure.Repositories.Abstract;
 using ReportBuilder.Infrastructure.Services.Abstract;
 using ReportBuilder.Models;
 using ReportBuilder.Services.UnitOfWork.Abstract;
+using ReportBuilder.ViewModel;
 using ReportBuilder.ViewModels;
 
 namespace ReportBuilder.Controllers
@@ -15,7 +15,6 @@ namespace ReportBuilder.Controllers
     public class ReportController : ApiController
     {
         private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-        private readonly IOrderRepository _orderRepository;
         private readonly IReportBuilder _reportBuilder;
         private readonly IEmailService _emailService;
      
@@ -25,24 +24,21 @@ namespace ReportBuilder.Controllers
 
         public ReportController(
             IUnitOfWorkFactory unitOfWorkFactory,
-            IOrderRepository orderRepository,
             IReportBuilder reportBuilder,
-            IEmailService emailService
-            )
+            IEmailService emailService)
         {
             if (unitOfWorkFactory == null)
                 throw new ArgumentNullException("unitOfWorkFactory is null");
-            if (orderRepository == null)
-                throw new ArgumentNullException("orderRepository is null");
             if (reportBuilder == null)
                 throw new ArgumentNullException("reportBuilderService is null");
             if (emailService == null)
                 throw new ArgumentNullException("emailService is null");
 
             _unitOfWorkFactory = unitOfWorkFactory;
-            _orderRepository = orderRepository;
             _reportBuilder = reportBuilder;
             _emailService = emailService;
+            // todo
+            emailService.Configure("reportbuildertest@yandex.com", "Dmitriy", "Abstraction1991");
         }
 
         //[Route("api/report/selectedorders")]
@@ -50,15 +46,12 @@ namespace ReportBuilder.Controllers
         {
             List<OrderViewModel> ordersVM;
 
-            using (_unitOfWorkFactory.Create())
+            using (IUnitOfWork unitOfWork = _unitOfWorkFactory.Create())
             {
                 List<Order> orders = null;
 
                 await Task.Run(
-                    () =>
-                        orders =
-                            _orderRepository.FindByIncluding(x => x.OrderDate < endDate && x.OrderDate > startDate)
-                                .ToList());
+                    () => orders = unitOfWork.OrderRepository.FindByIncluding(x => x.OrderDate < endDate && x.OrderDate > startDate).ToList());
 
                 Mapper.Initialize(cfg => cfg.CreateMap<Order, OrderViewModel>()
                     .ForMember(
@@ -81,8 +74,20 @@ namespace ReportBuilder.Controllers
         }
 
         [HttpPost]
-        public async Task<IHttpActionResult> SendReport(string email)
+        public async Task<IHttpActionResult> SendReport(ReportRequestViewModel vm)
         {
+            try
+            {
+                _emailService.SendFile(vm.Email, "C://Work/document.txt");
+            }
+            catch (Exception ex)
+            {
+                
+                throw;
+            }
+           
+
+            
             //using (IUnitOfWork unitOfWork = _unitOfWorkFactory.Create())
             //{
             //    string userName = RequestContext.Principal.Identity.Name;
