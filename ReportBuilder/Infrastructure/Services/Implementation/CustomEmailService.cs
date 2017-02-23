@@ -14,7 +14,7 @@ namespace ReportBuilder.Infrastructure.Services.Implementation
         {
             _smtp = new SmtpClient(emailHost, hostPort);
             // логин и пароль
-           
+
         }
 
         public void Configure(string senderMail, string senderName, string password)
@@ -27,10 +27,18 @@ namespace ReportBuilder.Infrastructure.Services.Implementation
         public void SendFile(string receiverMail, string filePath)
         {
             var receiverAddress = new MailAddress(receiverMail);
-            var mail = new MailMessage(_senderAddress, receiverAddress) { Subject = "Report" };
+            var mail = new MailMessage(_senderAddress, receiverAddress) {Subject = "Report"};
             mail.Attachments.Add(new Attachment(filePath));
 
             _smtp.Send(mail);
+        }
+
+        public void Dispose()
+        {
+            if (_smtp != null)
+            {
+                _smtp.Dispose();
+            }
         }
     }
 }

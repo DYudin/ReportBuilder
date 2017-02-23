@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
+using System.Web.Caching;
 using System.Web.Http;
+//using System.Web.Mvc;
 using AutoMapper;
-using ReportBuilder.Infrastructure.Repositories.Implementation;
 using ReportBuilder.Infrastructure.Services.Abstract;
 using ReportBuilder.Models;
 using ReportBuilder.Services.UnitOfWork.Abstract;
@@ -45,6 +47,7 @@ namespace ReportBuilder.Controllers
         //[Route("api/report/selectedorders")]
         public async Task<IHttpActionResult> GetOrdersByPeriod(DateTime startDate, DateTime endDate)
         {
+            HttpContext.Current.Cache.Remove("orders");
             List<OrderViewModel> ordersVM;
 
             using (IUnitOfWork unitOfWork = _unitOfWorkFactory.Create())
@@ -57,21 +60,8 @@ namespace ReportBuilder.Controllers
                 await Task.Run(
                     () => orders = unitOfWork.OrderRepository.FindBy(x => x.OrderDate < endDate && x.OrderDate > startDate).ToList());
 
-                Mapper.Initialize(cfg => cfg.CreateMap<Order, OrderViewModel>()
-                    .ForMember(
-                        dest => dest.OrderId,
-                        opt => opt.MapFrom(src => src.ID))
-                    .ForMember(
-                        dest => dest.ProductName,
-                        opt => opt.MapFrom(src => src.OrderDetail.FirstOrDefault().Product.Name))
-                    .ForMember(
-                        dest => dest.Quantity,
-                        opt => opt.MapFrom(src => src.OrderDetail.FirstOrDefault().Quantity))
-                    .ForMember(
-                        dest => dest.UnitPrice,
-                        opt => opt.MapFrom(src => src.OrderDetail.FirstOrDefault().UnitPrice)));
-
                 ordersVM = Mapper.Map<IEnumerable<Order>, List<OrderViewModel>>(orders);
+                HttpContext.Current.Cache.Add("orders", ordersVM, null, Cache.NoAbsoluteExpiration, new TimeSpan(0,15,0), CacheItemPriority.Normal, null );
             }
 
             return Ok(ordersVM);
@@ -80,18 +70,17 @@ namespace ReportBuilder.Controllers
         [HttpPost]
         public async Task<IHttpActionResult> SendReport(ReportRequestViewModel vm)
         {
-            try
-            {
-                _emailService.SendFile(vm.Email, "C://Users/Public/unity.txt");
-            }
-            catch (Exception ex)
-            {
-                
-                throw;
-            }
-           
+            var cacheItems = HttpContext.Current.Cache["orders"];
 
-            
+            if (cacheItems != null)
+            {
+                _reportBuilder.CreateReportFile((IEnumerable<OrderViewModel>)cacheItems);
+                _emailService.SendFile(vm.Email, "C://Users/Public/unity.txt");
+
+                //_reportBuilder.DeleteLastReportFile();
+
+            }
+
             //using (IUnitOfWork unitOfWork = _unitOfWorkFactory.Create())
             //{
             //    string userName = RequestContext.Principal.Identity.Name;
@@ -123,6 +112,19 @@ namespace ReportBuilder.Controllers
             //}
 
             return Ok();
+        }
+
+        public void Dispose()
+        {
+            if (_reportBuilder != null)
+            {
+                _reportBuilder.Dispose();
+            }
+
+            if (_emailService != null)
+            {
+                _emailService.Dispose();
+            }
         }
     }
 }

@@ -53,8 +53,7 @@ namespace ReportBuilder.Infrastructure.Repositories.Implementation
             {
                 query = query.Include(includeProperty);
             }
-            //var sql = ((System.Data.Entity.Core.Objects.ObjectQuery)query)
-            //.ToTraceString();
+
             return query.FirstOrDefault();
         }
 

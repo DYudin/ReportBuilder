@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 using System.Web.Http;
 using ReportBuilder;
+using ReportBuilder.Infrastructure;
 
 namespace WeatherCatcher
 {
@@ -16,6 +17,7 @@ namespace WeatherCatcher
 
             //AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
+            AutoMapperWebConfiguration.Configure();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
         }
     }
